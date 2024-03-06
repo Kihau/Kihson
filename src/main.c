@@ -29,7 +29,7 @@ int test1(Kihson *kihson) {
 
     printf("%s\n", json_string);
 
-    Value *json_head = kihson_parse(kihson, json_string);
+    KihsonValue *json_head = kihson_parse(kihson, json_string);
     if (json_head == NULL) {
         printf("Json parsing failed\n");
         free(json_string);
@@ -42,23 +42,23 @@ int test1(Kihson *kihson) {
         return 1;
     }
 
-    kihson_object_foreach(json_head, string1, value1) {
-        printf("%s: ", string1->data);
-
-        if (is_null(value1)) {
-            printf("null");
-        } else if (is_array(value1)) {
-            printf("[ ");
-            kihson_array_foreach(value1, value2) {
-                if (is_number(value2)) {
-                    printf("%lf ", get_double(value2));
-                }
-            }
-            printf("]");
-        }
-
-        printf("\n");
-    }
+    // kihson_object_foreach(json_head, string1, value1) {
+    //     printf("%s: ", string1);
+    //
+    //     if (is_null(value1)) {
+    //         printf("null");
+    //     } else if (is_array(value1)) {
+    //         printf("[ ");
+    //         kihson_array_foreach(value1, value2) {
+    //             if (is_number(value2)) {
+    //                 printf("%lf ", get_double(value2));
+    //             }
+    //         }
+    //         printf("]");
+    //     }
+    //
+    //     printf("\n");
+    // }
 
     free(json_string);
 }
@@ -100,28 +100,28 @@ int test2(Kihson *kihson) {
         .timeout = 0.0,
     };
 
-    kihson_object_foreach_item(json_head, item1) {
-        Value *token_value = try_get_value(item1, "token");
-        if (is_string(token_value)) {
-            config.token = get_cstring(token_value);
-        }
-
-        Value *ids_value = try_get_value(item1, "item-ids");
-        if (is_array(ids_value)) {
-            kihson_array_foreach(ids_value, array_value) {
-                if (is_number(array_value)) {
-                    config.ids[config.ids_count] = get_long(array_value);
-                    config.ids_count += 1;
-                }
-            }
-        }
-
-        Value *timeout_value = try_get_value(item1, "timeout");
-        if (is_number(ids_value)) {
-            config.timeout = get_double(timeout_value);
-
-        }
-    }
+    // kihson_object_foreach_item(json_head, item1) {
+    //     KihsonValue *token_value = try_get_value(item1, "token");
+    //     if (is_string(token_value)) {
+    //         config.token = get_string(token_value);
+    //     }
+    //
+    //     KihsonValue *ids_value = try_get_value(item1, "item-ids");
+    //     if (is_array(ids_value)) {
+    //         kihson_array_foreach(ids_value, array_value) {
+    //             if (is_number(array_value)) {
+    //                 config.ids[config.ids_count] = get_long(array_value);
+    //                 config.ids_count += 1;
+    //             }
+    //         }
+    //     }
+    //
+    //     KihsonValue *timeout_value = try_get_value(item1, "timeout");
+    //     if (is_number(ids_value)) {
+    //         config.timeout = get_double(timeout_value);
+    //
+    //     }
+    // }
 
     free(json_string);
 }
@@ -151,8 +151,8 @@ int main(int argc, char **argv) {
     test1(&kihson);
     kihson_clear(&kihson);
     test2(&kihson);
-    kihson_clear(&kihson);
-    test3(&kihson);
+    // kihson_clear(&kihson);
+    // test3(&kihson);
 
     kihson_free(&kihson);
 

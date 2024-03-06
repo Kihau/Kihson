@@ -44,9 +44,6 @@ typedef struct {
 
 typedef union {
     long string_index;
-    // TODO(!!!!): String tokens get invalidated after all_json_strings reallocation.
-    // KihsonStringView string_data;
-
     Number number_data;
     bool   boolean_data;
 } TokenData;
