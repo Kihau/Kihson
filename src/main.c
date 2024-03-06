@@ -184,6 +184,69 @@ int test3(Kihson *kihson) {
     free(json_string);
 }
 
+int test3(Kihson *kihson) {
+    char *json_string = read_to_string("res/example2.json");
+    if (json_string == NULL) {
+        printf("Failed to open json file\n");
+        return 1;
+    }
+
+    printf("%s\n", json_string);
+
+    Value *json_head = kihson_parse(kihson, json_string);
+    if (json_head == NULL) {
+        printf("Json parsing failed\n");
+        free(json_string);
+        return 1;
+    }
+
+    if (!is_object(json_head)) {
+        printf("Not and object, exiting...\n");
+        free(json_string);
+        return 1;
+    }
+
+    struct Config {
+        char *token;
+        int ids[16];
+        int ids_count;
+        float timeout;
+    };
+
+
+    struct Config config = {
+        .token = NULL,
+        .ids = {},
+        .ids_count = 0,
+        .timeout = 0.0,
+    };
+
+    kihson_object_foreach_item(json_head, item1) {
+        Value *token_value = try_get_value(item1, "token");
+        if (is_string(token_value)) {
+            config.token = get_cstring(token_value);
+        }
+
+        Value *ids_value = try_get_value(item1, "item-ids");
+        if (is_array(ids_value)) {
+            kihson_array_foreach(ids_value, array_value) {
+                if (is_number(array_value)) {
+                    config.ids[config.ids_count] = get_long(array_value);
+                    config.ids_count += 1;
+                }
+            }
+        }
+
+        Value *timeout_value = try_get_value(item1, "timeout");
+        if (is_number(ids_value)) {
+            config.timeout = get_double(timeout_value);
+
+        }
+    }
+
+    free(json_string);
+}
+
 int main(int argc, char **argv) {
     // printf("%i\n", (int)'\t');
 

@@ -12,17 +12,21 @@
 #define KIHSON_REALLOC realloc
 #define KIHSON_FREE    free
 
-// #define kihson_object_foreach2(current_value, _item)\
-//     for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)
+#define kihson_object_foreach_item(current_value, _item)\
+    for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)
+
+Value *try_get_value(ObjectItem *item, char *string) {
+    if (strcmp(item->string.data, string) == 0) {
+        return item->value;
+    }
+
+    return NULL;
+}
 
 #define kihson_object_foreach(current_value, _string, _value)\
     for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)\
         for (KihsonStringView *_string = &_item->string; _string != NULL; _string = NULL)\
             for (Value *_value = _item->value; _value != NULL; _value = NULL)
-
-
-// #define kihson_array_foreach2(current_value, _item)\
-//     for (ArrayItem *_item = current_value->data.array.item_list; _item != NULL; _item = _item->next_item)
 
 #define kihson_array_foreach(current_value, _value)\
     for (ArrayItem *_item = current_value->data.array.item_list; _item != NULL; _item = _item->next_item)\
