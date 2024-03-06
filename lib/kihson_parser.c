@@ -209,7 +209,7 @@ static Value *parse_value(KihsonParser *parser, KihsonLexer *lexer) {
 static void push_item(KihsonParser *parser, Item item) {
     if (parser->items_length == parser->items_capacity) {
         parser->items_capacity *= 2;
-        parser->items = realloc(parser->items, parser->items_capacity);
+        parser->items = realloc(parser->items, parser->items_capacity * sizeof(Item));
     }
 
     parser->items[parser->items_length] = item;
@@ -219,7 +219,7 @@ static void push_item(KihsonParser *parser, Item item) {
 static Item *allocate_item(KihsonParser *parser) {
     if (parser->items_length == parser->items_capacity) {
         parser->items_capacity *= 2;
-        parser->items = realloc(parser->items, parser->items_capacity);
+        parser->items = realloc(parser->items, parser->items_capacity * sizeof(Item));
     }
 
     Item *item = &parser->items[parser->items_length];
@@ -280,13 +280,22 @@ void kihparser_free(KihsonParser *parser) {
 }
 
 Value *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer) {
+    if (parser->items == NULL) {
+        return NULL;
+    }
+
     kihlexer_advance_token(lexer);
-    Value *value = parse_value(parser, lexer);
+    // Value *value = parse_value(parser, lexer);
+    long value_index = parse_value(parser, lexer);
 
     kihlexer_advance_token(lexer);
     if (lexer->token.token_type != TOKEN_END) {
         return NULL;
     } 
 
-    return value;
+    if (value_index == -1) {
+        return NULL
+    }
+
+    return &parser->items[value_index];
 }

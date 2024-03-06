@@ -15,14 +15,6 @@
 #define kihson_object_foreach_item(current_value, _item)\
     for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)
 
-Value *try_get_value(ObjectItem *item, char *string) {
-    if (strcmp(item->string.data, string) == 0) {
-        return item->value;
-    }
-
-    return NULL;
-}
-
 #define kihson_object_foreach(current_value, _string, _value)\
     for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)\
         for (KihsonStringView *_string = &_item->string; _string != NULL; _string = NULL)\
@@ -62,8 +54,9 @@ Value *kihson_parse(Kihson *kihson, char *null_string);
 /// Tokenize and parse json string.
 void kihson_load_with(Kihson *kihson, char *string, long length);
 
-/// Tokenize and parse json string.
 Value *object_get_value(Value *value, char *string);
+Value *try_get_value(ObjectItem *item, char *string);
+
 
 bool is_object(Value *value);
 bool is_array(Value *value);

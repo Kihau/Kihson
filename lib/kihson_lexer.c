@@ -270,8 +270,9 @@ static TokenLexResult kihlexer_chop_string(KihsonLexer *lexer, Token *token) {
     bool previous_escape  = false;
     // bool previous_unicode = false;
 
-    int start_offset = lexer->byte_offset + 1;
-    char *string_start = lexer->all_json_strings.data + lexer->all_json_strings.length;
+    // int start_offset = lexer->byte_offset + 1;
+    // char *string_start = lexer->all_json_strings.data + lexer->all_json_strings.length;
+    int start_offset = lexer->all_json_strings.length;
 
     char byte = kihlexer_peek_byte(lexer);
     while (byte != 0) {
@@ -338,8 +339,9 @@ static TokenLexResult kihlexer_chop_string(KihsonLexer *lexer, Token *token) {
                     kihstring_push(&lexer->all_json_strings, 0);
 
                     // String tokenization step ends here.
-                    int length = lexer->byte_offset - start_offset;
-                    token->token_data.string_data = kihstring_view_with(string_start, length);
+                    // int length = lexer->byte_offset - start_offset;
+                    // token->token_data.string_data = kihstring_view_with(string_start, length);
+                    token->token_data.string_index = start_offset;
                     token->token_type = TOKEN_STRING;
                     return LEX_RESULT_SUCCESS;
                 } else {

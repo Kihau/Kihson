@@ -3,25 +3,41 @@
 
 #include "kihson_lexer.h"
 
+// TODO: !!!!!!!!!!!!!!!
+// HUGE MEMORY BUG, ALL POINTER GET INVALIDATED AFTER REALLOC!!!
+// STORE LINKS AS INDEXES INSTEAD!!!
+
 typedef struct Object {
     int item_count;
-    struct ObjectItem *item_list;
+
+    // struct ObjectItem *item_list;
+    long item_list_index;
 } Object;
 
 typedef struct ObjectItem {
-    struct ObjectItem *next_item;
-    KihsonStringView string;
-    struct Value *value;
+    // struct ObjectItem *next_item;
+    long next_item_index;
+
+    // KihsonStringView string;
+    long string_index;
+
+    // struct Value *value;
+    long value_index;
 } ObjectItem;
 
 typedef struct {
     int item_count;
-    struct ArrayItem *item_list;
+
+    // struct ArrayItem *item_list;
+    long item_list_index;
 } Array;
 
 typedef struct ArrayItem {
-    struct ArrayItem *next_item;
-    struct Value *value;
+    // struct ArrayItem *next_item;
+    long next_item_index;
+
+    // struct Value *value;
+    long value_index;
 } ArrayItem;
 
 typedef enum {
@@ -38,13 +54,22 @@ typedef union {
     Array            array;
     Number           number;
     bool             boolean;
-    KihsonStringView string;
+
+    // KihsonStringView string;
+    long string_index;
 } ValueData;
 
 typedef struct Value {
     ValueType type;
     ValueData data;
 } Value;
+
+// Return this after parsing and make the Value struct internal to the impl?
+// typedef struct Value {
+//     ValueType type;
+//     ValueData data;
+//     Item *items;
+// } KihsonValue;
 
 typedef enum {
     ITEM_OBJECT,

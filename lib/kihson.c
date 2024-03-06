@@ -98,6 +98,14 @@ Value *object_get_value(Value *object_value, char *string) {
     return NULL;
 }
 
+Value *try_get_value(ObjectItem *item, char *string) {
+    if (strcmp(item->string.data, string) == 0) {
+        return item->value;
+    }
+
+    return NULL;
+}
+
 /// Generate new json string based on the structure.
 char* kihson_generate(Kihson *kihson) {
     return "TODO";

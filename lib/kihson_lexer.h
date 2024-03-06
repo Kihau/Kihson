@@ -43,7 +43,10 @@ typedef struct {
 } Number;
 
 typedef union {
-    KihsonStringView string_data;
+    long string_index;
+    // TODO(!!!!): String tokens get invalidated after all_json_strings reallocation.
+    // KihsonStringView string_data;
+
     Number number_data;
     bool   boolean_data;
 } TokenData;

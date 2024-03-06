@@ -1,8 +1,10 @@
 project(
   'Kihson', 'c',
   version : '0.1',
-  default_options : ['warning_level=3']
+  default_options : [ 'warning_level=3' ]
 )
+
+add_global_arguments('-g', language : 'c')
 
 cc = meson.get_compiler('c')
 math = cc.find_library('m', required : true)
