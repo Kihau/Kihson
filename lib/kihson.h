@@ -12,15 +12,26 @@
 #define KIHSON_REALLOC realloc
 #define KIHSON_FREE    free
 
+// #define kihson_object_foreach2(current_value, _item)\
+//     for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)
+
+#define kihson_object_foreach(current_value, _string, _value)\
+    for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)\
+        for (KihsonStringView *_string = &_item->string; _string != NULL; _string = NULL)\
+            for (Value *_value = _item->value; _value != NULL; _value = NULL)
+
+
+// #define kihson_array_foreach2(current_value, _item)\
+//     for (ArrayItem *_item = current_value->data.array.item_list; _item != NULL; _item = _item->next_item)
+
+#define kihson_array_foreach(current_value, _value)\
+    for (ArrayItem *_item = current_value->data.array.item_list; _item != NULL; _item = _item->next_item)\
+        for (Value *_value = _item->value; _value != NULL; _value = NULL)
+
 typedef struct {
-    KihsonString string;
     KihsonLexer  lexer;
     KihsonParser parser;
-
-    // char *json_string;
-    // StringView *string;
-    // KihsonTokens *tokens;
-    // KihsonTree *tokens;
+    Value *json_head;
 } Kihson;
 
 
@@ -41,21 +52,38 @@ void kihson_free(Kihson *kihson);
 // Json Reading
 //
 
-/// Tokenize and parse json string.
-void kihson_parse(Kihson *kihson, char *null_string);
+/// Tokenize and parse json string. Result true on success and false on failure.
+Value *kihson_parse(Kihson *kihson, char *null_string);
 
 /// Tokenize and parse json string.
 void kihson_load_with(Kihson *kihson, char *string, long length);
 
+/// Tokenize and parse json string.
+Value *object_get_value(Value *value, char *string);
+
+bool is_object(Value *value);
+bool is_array(Value *value);
+bool is_null(Value *value);
+bool is_number(Value *value);
+bool is_string(Value *value);
+bool is_boolean(Value *value);
+
+bool get_boolean(Value *value);
+Object get_object(Value *value);
+Array get_array(Value *value);
+double get_double(Value *value);
+long get_long(Value *value);
+char *get_cstring(Value *value);
+KihsonStringView get_string(Value *value);
 
 //
 // Json Writing
 //
 
 /// Generate new json string based on the structure.
-char* kihson_generate(Kihson *kihson);
+char *kihson_generate(Kihson *kihson);
 
 /// Generate new json string based on the structure.
-char* kihson_generate_pretty(Kihson *kihson, int indent_size);
+char *kihson_generate_pretty(Kihson *kihson, int indent_size);
 
 #endif // KIHSON

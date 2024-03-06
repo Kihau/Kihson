@@ -1,9 +1,9 @@
 { 
     "string0": null, 
-    "string1": [ 0, 2e-123, -3.3, 4 ],
+    "string1": [ 1, 2e-123, -3.3, 4 ],
     "string2": { 
         "string3": true, 
         "string4": 321.345 
     },
-    "rand\u": [ "whats up", null, false, {} ]
+    "rand": [ "whats up", null, false, {} ]
 }

@@ -260,7 +260,7 @@ KihsonParser kihparser_new(void) {
         .items          = items,
         .items_capacity = capacity,
         .items_length   = 0,
-        .value_base     = NULL,
+        // .value_base     = NULL,
     };
 
     return parser;
@@ -268,7 +268,7 @@ KihsonParser kihparser_new(void) {
 
 void kihparser_clear(KihsonParser *parser) {
     parser->items_length = 0;
-    parser->value_base    = NULL;
+    // parser->value_base    = NULL;
 }
 
 void kihparser_free(KihsonParser *parser) {
@@ -276,11 +276,17 @@ void kihparser_free(KihsonParser *parser) {
     parser->items = NULL,
     parser->items_length = 0;
     parser->items_capacity = 0;
-    parser->value_base = NULL;
+    // parser->value_base = NULL;
 }
 
-void kihparser_parse(KihsonParser *parser, KihsonLexer *lexer) {
+Value *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer) {
     kihlexer_advance_token(lexer);
     Value *value = parse_value(parser, lexer);
-    parser->value_base = value;
+
+    kihlexer_advance_token(lexer);
+    if (lexer->token.token_type != TOKEN_END) {
+        return NULL;
+    } 
+
+    return value;
 }

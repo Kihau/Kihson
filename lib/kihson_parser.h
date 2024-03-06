@@ -69,12 +69,12 @@ typedef struct {
     long items_length;
 
     // Json files consist from one and onyl value.
-    Value *value_base;
+    // Value *value_base;
 } KihsonParser;
 
 KihsonParser kihparser_new(void);
 void kihparser_clear(KihsonParser *parser);
 void kihparser_free(KihsonParser *parser);
-void kihparser_parse(KihsonParser *parser, KihsonLexer *lexer);
+Value *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer);
 
 #endif // KIHSON_PARSER

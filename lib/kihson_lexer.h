@@ -57,17 +57,11 @@ typedef struct {
 } Token;
 
 typedef struct {
-    // Should be owned by Kihson and not KihsonLexer?
     KihsonStringView json_string;
-
-    // The json strings can be copied during the tokenization process (byte by byte).
-    // As the strings are being copied, I can replace escape codes from the json sub-strings with the correct UTF-8
-    // codes and pass fragments of the copied string as the string tokens.
     KihsonString all_json_strings;
 
     Token token;
 
-    // char current_byte;
     int byte_offset;
     int line_offset;
     int line_number;
@@ -85,6 +79,7 @@ void kihlexer_load(KihsonLexer *lexer, KihsonStringView json_string);
 void kihlexer_load_cstr(KihsonLexer *lexer, char *json_cstring);
 void kihlexer_advance_token(KihsonLexer *lexer);
 void kihlexer_clear(KihsonLexer *lexer);
+void kihlexer_free(KihsonLexer *lexer);
 bool kihlexer_tokenize(KihsonLexer *lexer, KihsonTokenArray *token_array);
 bool kihlexer_tokenize_cstr(KihsonLexer *lexer, KihsonTokenArray *token_array);
 

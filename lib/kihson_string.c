@@ -27,6 +27,9 @@ void kihstring_push(KihsonString *string, char byte) {
 }
 
 void kihstring_clear(KihsonString *string) {
+    if (string->data != NULL && string->capacity > 0) {
+        string->data[0] = '\0';
+    }
     string->length = 0;
 }
 

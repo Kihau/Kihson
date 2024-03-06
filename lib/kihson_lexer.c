@@ -208,9 +208,20 @@ void kihlexer_advance_token(KihsonLexer *lexer) {
 }
 
 void kihlexer_clear(KihsonLexer *lexer) {
+    kihstring_clear(&lexer->all_json_strings);
+    lexer->json_string = (KihsonStringView) {
+        .data   = NULL,
+        .length = 0,
+    };
+
     lexer->byte_offset   = 0;
     lexer->line_offset   = 0;
     lexer->line_number   = 0;
+}
+
+void kihlexer_free(KihsonLexer *lexer) {
+    kihlexer_clear(lexer);
+    kihstring_free(&lexer->all_json_strings);
 }
 
 static void debug_lexer_fail(KihsonLexer *lexer, char *where) {
