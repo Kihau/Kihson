@@ -26,7 +26,7 @@ void kihson_free(Kihson *kihson) {
 }
 
 
-KihsonValue *kihson_parse(Kihson *kihson, char *null_string) {
+Value *kihson_parse(Kihson *kihson, char *null_string) {
     kihlexer_load_cstr(&kihson->lexer, null_string);
 
     // KihsonTokenArray token_array = kihtokens_new();
@@ -34,93 +34,73 @@ KihsonValue *kihson_parse(Kihson *kihson, char *null_string) {
     return kihparser_parse(&kihson->parser, &kihson->lexer);
 }
 
-bool is_object(KihsonValue *value) {
+bool is_object(Value *value) {
     return value != NULL && value->type == VALUE_OBJECT;
 }
 
-bool is_array(KihsonValue *value) {
+bool is_array(Value *value) {
     return value != NULL && value->type == VALUE_ARRAY;
 }
 
-bool is_null(KihsonValue *value) {
+bool is_null(Value *value) {
     return value != NULL && value->type == VALUE_NULL;
 }
 
-bool is_number(KihsonValue *value) {
+bool is_number(Value *value) {
     return value != NULL && value->type == VALUE_NUMBER;
 }
 
-bool is_string(KihsonValue *value) {
+bool is_string(Value *value) {
     return value != NULL && value->type == VALUE_STRING;
 }
 
-bool is_boolean(KihsonValue *value) {
+bool is_boolean(Value *value) {
     return value != NULL && value->type == VALUE_BOOLEAN;
 }
 
-Object get_object(KihsonValue *value) {
+Object get_object(Value *value) {
     return value->data.object;
 }
 
-Array get_array(KihsonValue *value) {
+Array get_array(Value *value) {
     return value->data.array;
 }
 
-double get_double(KihsonValue *value) {
+double get_double(Value *value) {
     return value->data.number.double_data;
 }
 
-long get_long(KihsonValue *value) {
+long get_long(Value *value) {
     return value->data.number.long_data;
 }
 
-char *get_string(KihsonValue *value) {
-    return &value->strings[value->data.string_index];
+char *get_string(Kihson *kihson, Value *value) {
+    return kihson->lexer.all_json_strings.data + value->data.string_index;
 }
 
-bool get_boolean(KihsonValue *value) {
+bool get_boolean(Value *value) {
     return value->data.boolean;
 }
 
-#define obj_item(_kv, _kidx) &_kv->items[_kidx].data.object
-#define get_str(_kv, _kitem) &_kv->strings[_kitem->string_index]
-#define get_val(_kv, _kitem) &_kv->items[_kitem->value_index].data.value
-
-KihsonValue *object_get_value(KihsonValue *current_value, char *string) {
-    long item_index = current_value->data.object.item_list_index;
-    // ObjectItem *_item = &current_value->items[item_index].data.object;
-    // char *_string = &current_value->strings[_item->string_index];
-    // Value *_value = &current_value->items[_item->value_index].data.value;
-    // for (; item_index != -1; item_index = _item->next_item_index)
-    //     for (ObjectItem *_item = obj_item(current_value, item_index); _item != NULL; _item = NULL)
-    //         for (char *_string = get_str(current_value, _item); _string != NULL; _string = NULL)
-    //             for (Value *_value = get_val(current_value, _item); _value != NULL; _value = NULL) {
-    //
-    //             }
-
-
-    // kihson_object_foreach(object_value, json_string, json_value) {
-    //     if (strcmp(json_string, string) == 0) {
-    //         return json_value;
-    //     }
-    // }
+Value *object_get_value(Kihson *kihson, Value *current_value, char *string) {
+    kihson_object_foreach(kihson, current_value, key, value) {
+        if (strcmp(key, string) == 0) {
+            return value;
+        }
+    }
 
     return NULL;
 }
 
-// KihsonValue *object_get_value(KihsonValue *object_value, char *string) {
-//     kihson_object_foreach(object_value, json_string, json_value) {
-//         if (strcmp(json_string, string) == 0) {
-//             return json_value;
-//         }
-//     }
-//
-//     return NULL;
-// }
+Value *try_get_value(Kihson *kihson, ObjectItem *item, char *string) {
+    char *key = item_string(kihson, item);
+    if (strcmp(key, string) == 0) {
+        return item_value(kihson, item);
+    }
 
-KihsonValue *try_get_value(ObjectItem *item, char *string) {
     return NULL;
 }
+
 
 /// Generate new json string based on the structure.
 char* kihson_generate(Kihson *kihson) {

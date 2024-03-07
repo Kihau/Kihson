@@ -7,16 +7,17 @@ static long parse_value(KihsonParser *parser, KihsonLexer *lexer);
 static long parse_object(KihsonParser *parser, KihsonLexer *lexer);
 static long parse_array(KihsonParser *parser, KihsonLexer *lexer);
 
-static long allocate_item(KihsonParser *parser);
-static long allocate_value_item(KihsonParser *parser);
-static long allocate_object_item(KihsonParser *parser);
-static long allocate_array_item(KihsonParser *parser);
+static long allocate_value(KihsonParser *parser);
+static long add_object(KihsonParser *parser);
+static long add_object_item(KihsonParser *parser);
+static long add_array(KihsonParser *parser);
+static long add_array_item(KihsonParser *parser);
 
-static Value      *get_value_item(KihsonParser *parser, long index);
+static Value      *get_value(KihsonParser *parser, long index);
 static Object     *get_object(KihsonParser *parser, long index);
 static ObjectItem *get_object_item(KihsonParser *parser, long index);
+static Array      *get_array(KihsonParser *parser, long index);
 static ArrayItem  *get_array_item(KihsonParser *parser, long index);
-
 
 static char *get_token_name(TokenType type) {
     switch (type) {
@@ -70,43 +71,26 @@ static bool token_is_value(Token *token) {
 }
 
 static long parse_object(KihsonParser *parser, KihsonLexer *lexer) {
-    long object_index = allocate_value_item(parser);
-
-    { // TOOD: Improve
-        Value *object = get_value_item(parser, object_index);
-        object->type = VALUE_OBJECT;
-        object->data.object = (Object) {
-            .item_count = 0,
-            .item_list_index = -1,
-        };
-    }
+    long object_index = add_object(parser);
 
     kihlexer_advance_token(lexer);
     if (lexer->token.token_type == TOKEN_CURLY_BRACKET_RIGHT) {
         return object_index;
     }
 
-    long object_item_index = allocate_object_item(parser);
-    {
-        Value *object = get_value_item(parser, object_index);
-        object->data.object.item_list_index = object_item_index;
-    }
+    long item_index = add_object_item(parser);
+    get_object(parser, object_index)->list_index = item_index; 
 
     while (true) {
-        {
-            Value *object = get_value_item(parser, object_index);
-            object->data.object.item_count += 1;
-        }
+        get_object(parser, object_index)->item_count += 1;
 
         if (lexer->token.token_type != TOKEN_STRING) {
             print_error(lexer, "STRING");
             return -1;
         }
 
-        {
-            ObjectItem *object_item = get_object_item(parser, object_item_index);
-            object_item->string_index = lexer->token.token_data.string_index;
-        }
+        long string_index = lexer->token.token_data.string_index;
+        get_object_item(parser, item_index)->string_index = string_index;
 
         kihlexer_advance_token(lexer);
         if (lexer->token.token_type != TOKEN_COLON) {
@@ -120,10 +104,7 @@ static long parse_object(KihsonParser *parser, KihsonLexer *lexer) {
             return -1;
         }
 
-        {
-            ObjectItem *object_item = get_object_item(parser, object_item_index);
-            object_item->value_index = value_index;
-        }
+        get_object_item(parser, item_index)->value_index = value_index;
 
         kihlexer_advance_token(lexer);
         if (lexer->token.token_type == TOKEN_CURLY_BRACKET_RIGHT) {
@@ -133,55 +114,34 @@ static long parse_object(KihsonParser *parser, KihsonLexer *lexer) {
             return -1;
         }
 
-        long next_item_index = allocate_object_item(parser);
-        {
-            ObjectItem *object_item = get_object_item(parser, object_item_index);
-            object_item->next_item_index = next_item_index;
-        }
-        object_item_index = next_item_index;
+        long next_index = add_object_item(parser);
+        get_object_item(parser, item_index)->next_index = next_index;
+        item_index = next_index;
 
         kihlexer_advance_token(lexer);
     }
 }
 
 static long parse_array(KihsonParser *parser, KihsonLexer *lexer) {
-    long array_index = allocate_value_item(parser);
-
-    {
-        Value *array = get_value_item(parser, array_index);
-        array->type = VALUE_ARRAY;
-        array->data.array = (Array) {
-            .item_count = 0,
-            .item_list_index = -1,
-        };
-    }
+    long array_index = add_array(parser);
 
     kihlexer_advance_token(lexer);
     if (lexer->token.token_type == TOKEN_SQUARE_BRACKET_RIGHT) {
         return array_index;
     }
 
-    long array_item_index = allocate_object_item(parser);
-    {
-        Value *array = get_value_item(parser, array_index);
-        array->data.array.item_list_index = array_item_index;
-    }
+    long item_index = add_array_item(parser);
+    get_array(parser, array_index)->list_index = item_index;
 
     while (true) {
-        {
-            Value *array = get_value_item(parser, array_index);
-            array->data.array.item_count += 1;
-        }
+        get_array(parser, array_index)->item_count += 1;
 
         long value_index = parse_value(parser, lexer);
         if (value_index == -1) {
             return -1;
         }
 
-        {
-            ArrayItem *array_item = get_array_item(parser, array_item_index);
-            array_item->value_index = value_index;
-        }
+        get_array_item(parser, item_index)->value_index = value_index;
 
         kihlexer_advance_token(lexer);
         if (lexer->token.token_type == TOKEN_SQUARE_BRACKET_RIGHT) {
@@ -191,12 +151,9 @@ static long parse_array(KihsonParser *parser, KihsonLexer *lexer) {
             return -1;
         }
 
-        long next_item_index = allocate_array_item(parser);
-        {
-            ArrayItem *array_item = get_array_item(parser, array_item_index);
-            array_item->next_item_index = next_item_index;
-        }
-        array_item_index = next_item_index;
+        long new_item = add_array_item(parser);
+        get_array_item(parser, item_index)->next_index = new_item;
+        item_index = new_item;
 
         kihlexer_advance_token(lexer);
     }
@@ -215,135 +172,151 @@ static long parse_value(KihsonParser *parser, KihsonLexer *lexer) {
         } break;
 
         case TOKEN_NUMBER: {
-            value_index = allocate_value_item(parser);
-            Value *value = get_value_item(parser, value_index);
+            value_index = allocate_value(parser);
+            Value *value = get_value(parser, value_index);
             value->type = VALUE_NUMBER;
             value->data.number = lexer->token.token_data.number_data;
         } break;
 
         case TOKEN_STRING: {
-            value_index = allocate_value_item(parser);
-            Value *value = get_value_item(parser, value_index);
+            value_index = allocate_value(parser);
+            Value *value = get_value(parser, value_index);
             value->type = VALUE_STRING;
             value->data.string_index = lexer->token.token_data.string_index;
         } break;
 
         case TOKEN_BOOLEAN: {
-            value_index = allocate_value_item(parser);
-            Value *value = get_value_item(parser, value_index);
+            value_index = allocate_value(parser);
+            Value *value = get_value(parser, value_index);
             value->type = VALUE_BOOLEAN;
             value->data.boolean = lexer->token.token_data.boolean_data;
         } break;
 
         case TOKEN_NULL: {
-            value_index = allocate_value_item(parser);
-            Value *value = get_value_item(parser, value_index);
+            value_index = allocate_value(parser);
+            Value *value = get_value(parser, value_index);
             value->type = VALUE_NULL;
         } break;
 
         default: {
             print_error(lexer, "VALUE");
-            return NULL;
+            return -1;
         } break;
     }
 
     return value_index;
 }
 
-static long allocate_item(KihsonParser *parser) {
-    if (parser->items_length == parser->items_capacity) {
-        parser->items_capacity *= 2;
-        parser->items = realloc(parser->items, parser->items_capacity * sizeof(Item));
+static long allocate_value(KihsonParser *parser) {
+    if (parser->length == parser->capacity) {
+        parser->capacity *= 2;
+        parser->values = realloc(parser->values, parser->capacity * sizeof(Value));
     }
 
-    long item_index = parser->items_length;
-    parser->items_length += 1;
+    long item_index = parser->length;
+    parser->length += 1;
     return item_index;
 }
 
-static long allocate_value_item(KihsonParser *parser) {
-    long index = allocate_item(parser);
-    parser->items[index].type = ITEM_VALUE;
+static long add_object(KihsonParser *parser) {
+    long index = allocate_value(parser);
+    parser->values[index] = (Value) {
+        .type = VALUE_OBJECT,
+        .data.object = (Object) {
+            .item_count = 0,
+            .list_index = -1,
+        },
+    };
+
     return index;
 }
 
-static long allocate_object_item(KihsonParser *parser) {
-    long index = allocate_item(parser);
-    parser->items[index].type = ITEM_OBJECT;
+static long add_object_item(KihsonParser *parser) {
+    long index = allocate_value(parser);
+    parser->values[index] = (Value) {
+        .type = VALUE_OBJECT_ITEM,
+        .data.object_item = (ObjectItem) {
+            .string_index = -1,
+            .value_index  = -1,
+            .next_index   = -1,
+        },
+    };
+
     return index;
 }
 
-static long allocate_array_item(KihsonParser *parser) {
-    long index = allocate_item(parser);
-    parser->items[index].type = ITEM_ARRAY;
+static long add_array(KihsonParser *parser) {
+    long index = allocate_value(parser);
+    parser->values[index] = (Value) {
+        .type = VALUE_ARRAY,
+        .data.array = (Array) {
+            .item_count = 0,
+            .list_index = -1,
+        },
+    };
+
     return index;
 }
 
-static Value *get_value_item(KihsonParser *parser, long index) {
-    if (index >= parser->items_length) {
-        return NULL;
-    }
+static long add_array_item(KihsonParser *parser) {
+    long index = allocate_value(parser);
+    parser->values[index] = (Value) {
+        .type = VALUE_ARRAY_ITEM,
+        .data.array_item = (ArrayItem) {
+            .value_index  = -1,
+            .next_index   = -1,
+        },
+    };
 
-    Item *value_item = &parser->items[index];
-    return &value_item->data.value;
+    return index;
+}
+
+static Value *get_value(KihsonParser *parser, long index) {
+    return &parser->values[index];
 }
 
 static Object *get_object(KihsonParser *parser, long index) {
-    if (index >= parser->items_length) {
-        return NULL;
-    }
-
-    Item *value_item = &parser->items[index];
-    return &value_item->data.value.data.object;
+    return &parser->values[index].data.object;
 }
 
 static ObjectItem *get_object_item(KihsonParser *parser, long index) {
-    if (index >= parser->items_length) {
-        return NULL;
-    }
+    return &parser->values[index].data.object_item;
+}
 
-    Item *object_item = &parser->items[index];
-    return &object_item->data.object;
+static Array *get_array(KihsonParser *parser, long index) {
+    return &parser->values[index].data.array;
 }
 
 static ArrayItem *get_array_item(KihsonParser *parser, long index) {
-    if (index >= parser->items_length) {
-        return NULL;
-    }
-
-    Item *array_item = &parser->items[index];
-    return &array_item->data.array;
+    return &parser->values[index].data.array_item;
 }
 
 KihsonParser kihparser_new(void) {
     const long capacity = 1024;
-    Item *items = malloc(capacity * sizeof(Item));
+    Value *values = malloc(capacity * sizeof(Value));
     
     KihsonParser parser = {
-        .items          = items,
-        .items_capacity = capacity,
-        .items_length   = 0,
-        // .value_base     = NULL,
+        .values   = values,
+        .capacity = capacity,
+        .length   = 0,
     };
 
     return parser;
 }
 
 void kihparser_clear(KihsonParser *parser) {
-    parser->items_length = 0;
-    // parser->value_base    = NULL;
+    parser->length = 0;
 }
 
 void kihparser_free(KihsonParser *parser) {
-    free(parser->items);
-    parser->items = NULL,
-    parser->items_length = 0;
-    parser->items_capacity = 0;
-    // parser->value_base = NULL;
+    free(parser->values);
+    parser->values = NULL,
+    parser->length = 0;
+    parser->capacity = 0;
 }
 
-KihsonValue *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer) {
-    if (parser->items == NULL) {
+Value *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer) {
+    if (parser->values == NULL) {
         return NULL;
     }
 
@@ -359,15 +332,7 @@ KihsonValue *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer) {
         return NULL;
     }
 
-    Value json_head = parser->items[value_index].data.value;
-
-    KihsonValue value = {
-        .data = json_head.data,
-        .type = json_head.type,
-        .items = parser->items,
-        .strings = lexer->all_json_strings.data,
-    };
-
-    parser->value_base = value;
-    return &parser->value_base;
+    Value json_head = parser->values[value_index];
+    parser->main_value = json_head;
+    return &parser->main_value;
 }

@@ -5,5 +5,5 @@
         "string3": true, 
         "string4": 321.345 
     },
-    "rand": [ "\"łwhats up", null, false, {} ]
+    "rand": [ "whats up", null, false, {} ]
 }

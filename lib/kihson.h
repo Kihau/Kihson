@@ -12,26 +12,40 @@
 #define KIHSON_REALLOC realloc
 #define KIHSON_FREE    free
 
-// #define kihson_object_foreach_item(current_value, _item)\
-//     for (ObjectItem *_item = current_value->data.object.item_list; _item != NULL; _item = _item->next_item)
-//
-// #define kihson_object_foreach(current_value, _string, _value)\
-//     for (ObjectItem *_item = &current_value->items[current_value->data.object.item_list_index].data.object; _item != NULL; _item = _item->next_item)\
-//         for (char *_string = &current_value->strings[_item->string_index]; _string != NULL; _string = NULL)\
-//             for (Value *_value = &current_value->items[_item->value_index].data.value; _value != NULL; _value = NULL)
-//
-// #define kihson_array_foreach(current_value, _value)\
-//     for (ArrayItem *_item = current_value->data.array.item_list; _item != NULL; _item = _item->next_item)\
-//         for (Value *_value = _item->value; _value != NULL; _value = NULL)
+
+#define object_item_index(kihson, current) kihson->parser.values[current].data.object_item.next_index
+#define get_object_item(kihson, index)    &kihson->parser.values[index].data.object_item
+
+#define array_item_index(kihson, current) kihson->parser.values[current].data.array_item.next_index
+#define get_array_item(kihson, index)    &kihson->parser.values[index].data.array_item
+
+#define item_string(kihson, item)  &kihson->lexer.all_json_strings.data[item->string_index]
+#define item_value(kihson, item)   &kihson->parser.values[item->value_index]
+
+
+#define kihson_object_foreach(kihson, current_value, _string, _value)\
+    for (long _index = current_value->data.object.list_index; _index != -1; _index = object_item_index(kihson, _index))\
+        for (ObjectItem *_item = get_object_item(kihson, _index); _item != NULL; _item = NULL)\
+            for (char *_string = item_string(kihson, _item); _string != NULL; _string = NULL)\
+                for (Value *_value = item_value(kihson, _item); _value != NULL; _value = NULL)
+
+#define kihson_object_foreach_item(kihson, current_value, _item)\
+    for (long _index = current_value->data.object.list_index; _index != -1; _index = object_item_index(kihson, _index))\
+        for (ObjectItem *_item = get_object_item(kihson, _index); _item != NULL; _item = NULL)
+
+#define kihson_object_foreach_index(_kihson, _value, _index)\
+    for (long _index = get_object(_value).list_index; _index != -1; _index = object_item_index(_kihson, _index))
+
+#define kihson_array_foreach(kihson, current_value, _value)\
+    for (long _index = current_value->data.array.list_index; _index != -1; _index = array_item_index(kihson, _index))\
+        for (ArrayItem *_item = get_array_item(kihson, _index); _item != NULL; _item = NULL)\
+            for (Value *_value = item_value(kihson, _item); _value != NULL; _value = NULL)
 
 typedef struct {
     KihsonLexer  lexer;
     KihsonParser parser;
     Value *json_head;
 } Kihson;
-
-
-// TODO: All should return result after the operation.
 
 
 /// Allocate new kihson structure.
@@ -49,28 +63,29 @@ void kihson_free(Kihson *kihson);
 //
 
 /// Tokenize and parse json string. Result true on success and false on failure.
-KihsonValue *kihson_parse(Kihson *kihson, char *null_string);
+Value *kihson_parse(Kihson *kihson, char *null_string);
 
 /// Tokenize and parse json string.
 void kihson_load_with(Kihson *kihson, char *string, long length);
 
-KihsonValue *object_get_value(KihsonValue *value, char *string);
-KihsonValue *try_get_value(ObjectItem *item, char *string);
+
+Value *object_get_value(Kihson *kihson, Value *value, char *string);
+Value *try_get_value(Kihson *kihson, ObjectItem *item, char *string);
 
 
-bool is_object(KihsonValue *value);
-bool is_array(KihsonValue *value);
-bool is_null(KihsonValue *value);
-bool is_number(KihsonValue *value);
-bool is_string(KihsonValue *value);
-bool is_boolean(KihsonValue *value);
+bool is_object(Value *value);
+bool is_array(Value *value);
+bool is_null(Value *value);
+bool is_number(Value *value);
+bool is_string(Value *value);
+bool is_boolean(Value *value);
 
-bool get_boolean(KihsonValue *value);
-Object get_object(KihsonValue *value);
-Array get_array(KihsonValue *value);
-double get_double(KihsonValue *value);
-long get_long(KihsonValue *value);
-char *get_string(KihsonValue *value);
+bool get_boolean(Value *value);
+Object get_object(Value *value);
+Array get_array(Value *value);
+double get_double(Value *value);
+long get_long(Value *value);
+char *get_string(Kihson *kihson, Value *value);
 
 //
 // Json Writing

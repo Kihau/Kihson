@@ -1,0 +1,5 @@
+{
+    "token": "super-secret-token",
+    "item-ids": [ 1, 2, 3, 4 ],
+    "timeout": 213.3
+}

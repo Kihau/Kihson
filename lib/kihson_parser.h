@@ -5,26 +5,28 @@
 
 typedef struct Object {
     int item_count;
-    long item_list_index;
+    long list_index;
 } Object;
 
 typedef struct ObjectItem {
-    long next_item_index;
+    long next_index;
     long string_index;
     long value_index;
 } ObjectItem;
 
 typedef struct {
     int item_count;
-    long item_list_index;
+    long list_index;
 } Array;
 
 typedef struct ArrayItem {
-    long next_item_index;
+    long next_index;
     long value_index;
 } ArrayItem;
 
 typedef enum {
+    VALUE_OBJECT_ITEM,
+    VALUE_ARRAY_ITEM,
     VALUE_OBJECT,
     VALUE_ARRAY,
     VALUE_STRING,
@@ -34,11 +36,13 @@ typedef enum {
 } ValueType;
 
 typedef union {
-    Object object;
-    Array  array;
-    Number number;
-    bool   boolean;
-    long   string_index;
+    ObjectItem object_item;
+    ArrayItem  array_item;
+    Object     object;
+    Array      array;
+    Number     number;
+    bool       boolean;
+    long       string_index;
 } ValueData;
 
 typedef struct Value {
@@ -46,42 +50,18 @@ typedef struct Value {
     ValueData data;
 } Value;
 
-typedef enum {
-    ITEM_OBJECT,
-    ITEM_ARRAY,
-    ITEM_VALUE,
-} ItemType;
-
-typedef union {
-    ObjectItem object;
-    ArrayItem  array;
-    Value      value;
-} ItemData;
-
-typedef struct Item {
-    ItemType type;
-    ItemData data;
-} Item;
-
 typedef struct {
-    ValueType type;
-    ValueData data;
-    Item *items;
-    char *strings;
-} KihsonValue;
+    Value *values;
+    long capacity;
+    long length;
 
-typedef struct {
-    Item *items;
-    long items_capacity;
-    long items_length;
-
-    // Json files consist from one and onyl value.
-    KihsonValue value_base;
+    // Json files consist from one top level value.
+    Value main_value;
 } KihsonParser;
 
 KihsonParser kihparser_new(void);
 void kihparser_clear(KihsonParser *parser);
 void kihparser_free(KihsonParser *parser);
-KihsonValue *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer);
+Value *kihparser_parse(KihsonParser *parser, KihsonLexer *lexer);
 
 #endif // KIHSON_PARSER

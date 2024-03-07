@@ -281,10 +281,11 @@ static TokenLexResult kihlexer_chop_string(KihsonLexer *lexer, Token *token) {
         switch (byte) {
             case '\\': {
                 if (previous_escape) {
+                    previous_escape = false;
                     byte = '\\';
+                } else {
+                    previous_escape = true;
                 }
-
-                previous_escape = !previous_escape;
             } break;
 
             case '\b':  
@@ -301,27 +302,33 @@ static TokenLexResult kihlexer_chop_string(KihsonLexer *lexer, Token *token) {
             } break;
 
             case 'b': if (previous_escape) {
+                previous_escape = false;
                 byte = '\b';
             } break;
 
             case 'f': if (previous_escape) {
+                previous_escape = false;
                 byte = '\f';
             } break;
 
             case 'n': if (previous_escape) {
+                previous_escape = false;
                 byte = '\n';
             } break;
 
             case 'r': if (previous_escape) {
+                previous_escape = false;
                 byte = '\r';
             } break;
 
             case 't': if (previous_escape) {
+                previous_escape = false;
                 byte = '\t';
             } break;
 
             case 'u': {
                 if (previous_escape) {
+                    previous_escape = false;
                     // TODO:
                     // long parsed_unicode;
                     // long result = kihlexer_parse_unicode(lexer, &parsed_unicode);
@@ -346,6 +353,7 @@ static TokenLexResult kihlexer_chop_string(KihsonLexer *lexer, Token *token) {
                     return LEX_RESULT_SUCCESS;
                 } else {
                     kihstring_push(&lexer->all_json_strings, byte);
+                    previous_escape = false;
                 }
             } break;
 
